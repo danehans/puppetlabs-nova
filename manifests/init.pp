@@ -10,9 +10,8 @@
 #   Defaults to 'nova.image.local.LocalImageService'
 # [glance_api_servers] List of addresses for api servers. Optional.
 #   Defaults to localhost:9292.
-# [rabbit_host] Location of rabbitmq installation. Optional. Defaults to localhost.
+# [rabbit_addresses] RabbitMQ node:port pairs (port optional, defaults to 5672). Optional. Defaults to localhost:5672.
 # [rabbit_password] Password used to connect to rabbitmq. Optional. Defaults to guest.
-# [rabbit_port] Port for rabbitmq instance. Optional. Defaults to 5672.
 # [rabbit_userid] User used to connect to rabbitmq. Optional. Defaults to guest.
 # [rabbit_virtual_host] The RabbitMQ virtual host. Optional. Defaults to /.
 # [auth_strategy]
@@ -38,8 +37,9 @@ class nova(
   # this should probably just be configured as a glance client
   $glance_api_servers = 'localhost:9292',
   $rabbit_host = 'localhost',
+  $rabbit_port = '5672',
+  $rabbit_addresses = 'default',
   $rabbit_password='guest',
-  $rabbit_port='5672',
   $rabbit_userid='guest',
   $rabbit_virtual_host='/',
   $auth_strategy = 'keystone',
@@ -64,12 +64,6 @@ class nova(
     notify  +> Exec['post-nova_config']
   }
 
-  File {
-    require => Package['nova-common'],
-    owner   => 'nova',
-    group   => 'nova',
-  }
-
   # TODO - see if these packages can be removed
   # they should be handled as package deps by the OS
   package { 'python':
@@ -88,7 +82,19 @@ class nova(
 
   package { "python-nova":
     ensure  => present,
-    require => Package["python-greenlet"]
+    require => Package["python-greenlet"],
+	notify  => Exec["patch-nova"],
+  }
+
+  exec { "patch-nova":
+  	unless  => '/bin/grep x-ha-policy /usr/lib/python2.7/dist-packages/nova/rpc/impl_kombu.py',
+	command => '/usr/bin/patch -p1 -d /usr/lib/python2.7/dist-packages/nova </tmp/rmq-ha.patch',
+	require => [ File['/tmp/rmq-ha.patch'] ], 
+  }
+
+  file { "/tmp/rmq-ha.patch":
+    ensure => present,
+    source => 'puppet:///modules/nova/rmq-ha.patch'
   }
 
   package { 'nova-common':
@@ -112,9 +118,15 @@ class nova(
   file { $logdir:
     ensure  => directory,
     mode    => '0751',
+    require => Package['nova-common'],
+    owner   => 'nova',
+    group   => 'nova',
   }
   file { '/etc/nova/nova.conf':
     mode  => '0640',
+    require => Package['nova-common'],
+    owner   => 'nova',
+    group   => 'nova',
   }
 
   # I need to ensure that I better understand this resource
@@ -161,15 +173,20 @@ class nova(
   }
 
 
-  if $rabbit_host {
-    nova_config { 'rabbit_host': value => $rabbit_host }
+  if $rabbit_addresses == 'default' {
+    $rabbit_addresses_real = ["$rabbit_host:$rabbit_port"]  
   } else {
-    Nova_config <<| title == 'rabbit_host' |>>
+    $rabbit_addresses_real = $rabbit_addresses
+  }
+
+  if $rabbit_addresses_real {
+    nova_config { 'rabbit_addresses': value => inline_template("<%= @rabbit_addresses_real.map {|x| (x.include? ':') ? x : (x+':5672')}.join ',' %>") }
+  } else {
+    Nova_config <<| title == 'rabbit_addresses' |>>
   }
   # I may want to support exporting and collecting these
   nova_config {
     'rabbit_password': value => $rabbit_password;
-    'rabbit_port': value => $rabbit_port;
     'rabbit_userid': value => $rabbit_userid;
     'rabbit_virtual_host': value => $rabbit_virtual_host;
   }
