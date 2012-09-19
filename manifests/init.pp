@@ -74,6 +74,11 @@ class nova(
     require => Package['python'],
   }
 
+ # Required to implement Nova patch
+  package { 'patch':
+    ensure => present,
+  }
+
   class { 'nova::utilities': }
 
   # this anchor is used to simplify the graph between nova components by
@@ -89,7 +94,7 @@ class nova(
   exec { "patch-nova":
   	unless  => '/bin/grep x-ha-policy /usr/lib/python2.7/dist-packages/nova/rpc/impl_kombu.py',
 	command => '/usr/bin/patch -p1 -d /usr/lib/python2.7/dist-packages/nova </tmp/rmq-ha.patch',
-	require => [ File['/tmp/rmq-ha.patch'] ], 
+	require => [ File['/tmp/rmq-ha.patch'],Package['patch'] ], 
   }
 
   file { "/tmp/rmq-ha.patch":
