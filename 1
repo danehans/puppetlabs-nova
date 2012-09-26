@@ -31,14 +31,14 @@
 class nova(
   # this is how to query all resources from our clutser
   $nova_cluster_id='localcluster',
-  $sql_connection = false,
+  $sql_connection = $false,
   $image_service = 'nova.image.glance.GlanceImageService',
   # these glance params should be optional
   # this should probably just be configured as a glance client
   $glance_api_servers = 'localhost:9292',
   $rabbit_host = 'localhost',
   $rabbit_port = '5672',
-  $rabbit_addresses = $rabbit_addresses,
+  $rabbit_addresses = 'default',
   $rabbit_password='guest',
   $rabbit_userid='guest',
   $rabbit_virtual_host='/',
