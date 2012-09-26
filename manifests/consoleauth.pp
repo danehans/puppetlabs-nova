@@ -5,11 +5,14 @@
 # for Horizon
 #
 class nova::consoleauth(
-  $enabled        = false,
-  $ensure_package = 'present'
+  $enabled           = false,
+  $memcached_servers = '127.0.0.1',
+  $ensure_package    = 'present',
 ) {
 
   include nova::params
+
+  nova_config {'memcached_servers': value => $memcached_servers;}
 
   nova::generic_service { 'consoleauth':
     enabled        => $enabled,
