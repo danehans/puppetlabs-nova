@@ -88,13 +88,19 @@ class nova(
   package { "python-nova":
     ensure  => present,
     require => Package["python-greenlet"],
-	notify  => Exec["patch-nova"],
+	notify  => Exec["patch-nova1","patch-nova2"],
   }
 
-  exec { "patch-nova":
+  exec { "patch-nova1":
   	unless  => '/bin/grep x-ha-policy /usr/lib/python2.7/dist-packages/nova/rpc/impl_kombu.py',
 	command => '/usr/bin/patch -p1 -d /usr/lib/python2.7/dist-packages/nova </tmp/rmq-ha.patch',
 	require => [ File['/tmp/rmq-ha.patch'],Package['patch'] ], 
+  }
+
+  exec { "patch-nova2":
+        unless  => '/bin/grep x-ha-policy /usr/share/pyshared/nova/rpc/impl_kombu.py',
+        command => '/usr/bin/patch -p1 -d /usr/share/pyshared/nova </tmp/rmq-ha.patch',
+        require => [ File['/tmp/rmq-ha.patch'],Package['patch'] ],
   }
 
   file { "/tmp/rmq-ha.patch":
