@@ -79,6 +79,23 @@ class nova(
     ensure => present,
   }
 
+ # New Patch Code to Test
+  package { 'kombu':
+    ensure => '2.4.7',
+    provider => pip,
+  }
+
+  package { 'anyjson':
+    ensure => '0.3.3',
+    provider => pip,
+  }
+
+  package { 'amqp':
+    ensure => '0.9.4',
+    provider => pip,
+  }
+  # End New Patch
+
   class { 'nova::utilities': }
 
   # this anchor is used to simplify the graph between nova components by
