@@ -80,19 +80,27 @@ class nova(
   }
 
  # New Patch Code to Test
+  package { 'python-pip':
+    ensure => present,
+    require => Package['python'],
+  }
+
   package { 'kombu':
     ensure => '2.4.7',
     provider => pip,
+    require => Package['python-pip'],
   }
 
   package { 'anyjson':
     ensure => '0.3.3',
     provider => pip,
+    require => Package['python-pip'],
   }
 
   package { 'amqp':
     ensure => '0.9.4',
     provider => pip,
+    require => Package['python-pip'],
   }
   # End New Patch
 
