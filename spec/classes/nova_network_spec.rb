@@ -73,7 +73,8 @@ describe 'nova::network' do
     describe 'when creating networks' do
       it { should contain_nova__manage__network('nova-vm-net').with(
         :network      => '10.0.0.0/32',
-        :num_networks => '1'
+        :num_networks => '1',
+        :network_size => '256'
       ) }
       it { should_not contain__nova__manage__floating('nova-vm-floating') }
       describe 'when number of networks is set' do
@@ -82,6 +83,14 @@ describe 'nova::network' do
         end
         it { should contain_nova__manage__network('nova-vm-net').with(
           :num_networks => '2'
+        ) }
+      end
+      describe 'when network size is set' do
+        let :params do
+          default_params.merge(:network_size => '512')
+        end
+        it { should contain_nova__manage__network('nova-vm-net').with(
+          :network_size => '512'
         ) }
       end
       describe 'when floating range is set' do

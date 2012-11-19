@@ -31,14 +31,14 @@
 class nova(
   # this is how to query all resources from our clutser
   $nova_cluster_id='localcluster',
-  $sql_connection = false,
+  $sql_connection = $false,
   $image_service = 'nova.image.glance.GlanceImageService',
   # these glance params should be optional
   # this should probably just be configured as a glance client
   $glance_api_servers = 'localhost:9292',
   $rabbit_host = 'localhost',
   $rabbit_port = '5672',
-  $rabbit_addresses = $rabbit_addresses,
+  $rabbit_addresses = 'default',
   $rabbit_password='guest',
   $rabbit_userid='guest',
   $rabbit_virtual_host='/',
@@ -79,31 +79,6 @@ class nova(
     ensure => present,
   }
 
- # New Patch Code to Test
-  package { 'python-pip':
-    ensure => present,
-    require => Package['python'],
-  }
-
-  package { 'kombu':
-    ensure => '2.4.7',
-    provider => pip,
-    require => Package['python-pip'],
-  }
-
-  package { 'anyjson':
-    ensure => '0.3.3',
-    provider => pip,
-    require => Package['python-pip'],
-  }
-
-  package { 'amqp':
-    ensure => '0.9.4',
-    provider => pip,
-    require => Package['python-pip'],
-  }
-  # End New Patch
-
   class { 'nova::utilities': }
 
   # this anchor is used to simplify the graph between nova components by
@@ -113,19 +88,13 @@ class nova(
   package { "python-nova":
     ensure  => present,
     require => Package["python-greenlet"],
-	notify  => Exec["patch-nova1","patch-nova2"],
+	notify  => Exec["patch-nova"],
   }
 
-  exec { "patch-nova1":
+  exec { "patch-nova":
   	unless  => '/bin/grep x-ha-policy /usr/lib/python2.7/dist-packages/nova/rpc/impl_kombu.py',
 	command => '/usr/bin/patch -p1 -d /usr/lib/python2.7/dist-packages/nova </tmp/rmq-ha.patch',
 	require => [ File['/tmp/rmq-ha.patch'],Package['patch'] ], 
-  }
-
-  exec { "patch-nova2":
-        unless  => '/bin/grep x-ha-policy /usr/share/pyshared/nova/rpc/impl_kombu.py',
-        command => '/usr/bin/patch -p1 -d /usr/share/pyshared/nova </tmp/rmq-ha.patch',
-        require => [ File['/tmp/rmq-ha.patch'],Package['patch'] ],
   }
 
   file { "/tmp/rmq-ha.patch":

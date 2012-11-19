@@ -44,7 +44,7 @@ describe 'nova::api' do
       )}
     end
     describe 'with defaults' do
-      it 'should use default params for api-paste.init' do
+      it 'should use default params for api-paste.ini' do
         verify_contents(subject, '/etc/nova/api-paste.ini',
           [
             '[filter:authtoken]',
@@ -55,10 +55,14 @@ describe 'nova::api' do
             'auth_uri = http://127.0.0.1:35357/v2.0',
             'admin_tenant_name = services',
             'admin_user = nova',
-            'admin_password = passw0rd'
+            'admin_password = passw0rd',
           ]
         )
       end
+      it { should contain_nova_config('ec2_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('osapi_compute_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('metadata_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('osapi_volume_listen').with('value' => '0.0.0.0') }
     end
     describe 'with params' do
       let :params do
@@ -72,7 +76,7 @@ describe 'nova::api' do
           :admin_password    => 'passw0rd2'
         }
       end
-      it 'should use default params for api-paste.init' do
+      it 'should use default params for api-paste.ini' do
         verify_contents(subject, '/etc/nova/api-paste.ini',
           [
             '[filter:authtoken]',
@@ -83,10 +87,15 @@ describe 'nova::api' do
             'auth_uri = https://10.0.0.1:1234/v2.0',
             'admin_tenant_name = service2',
             'admin_user = nova2',
-            'admin_password = passw0rd2'
+            'admin_password = passw0rd2',
+            :api_bind_address  => '192.168.56.210',
           ]
         )
       end
+      it { should contain_nova_config('ec2_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('osapi_compute_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('metadata_listen').with('value' => '0.0.0.0') }
+      it { should contain_nova_config('osapi_volume_listen').with('value' => '0.0.0.0') }
     end
   end
   describe 'on rhel' do
