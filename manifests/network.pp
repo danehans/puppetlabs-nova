@@ -4,6 +4,7 @@
 # [fixed_range] Fixed private network range.
 # [num_networks] Number of networks that fixed range network should be
 #  split into.
+# [network_size] number of IP's in the network.
 # [floating_range] Range of floating ip addresses to create.
 # [enabled] Rather the network service should be enabled.
 # [network_manager] The type of network manager to use.
@@ -16,6 +17,7 @@ class nova::network(
   $fixed_range,
   $public_interface = undef,
   $num_networks     = 1,
+  $network_size     = 256,
   $floating_range   = false,
   $enabled          = false,
   $network_manager  = 'nova.network.manager.FlatDHCPManager',
@@ -56,6 +58,7 @@ class nova::network(
     nova::manage::network { 'nova-vm-net':
       network       => $fixed_range,
       num_networks  => $num_networks,
+      network_size  => $network_size,
     }
     if $floating_range {
       nova::manage::floating { 'nova-vm-floating':

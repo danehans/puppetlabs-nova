@@ -23,6 +23,11 @@ Puppet::Type.newtype(:nova_network) do
     defaultto(1)
   end
 
+  newparam(:network_size) do
+    desc 'Network size to create'
+    defaultto(256)
+  end
+
   newparam(:bridge) do
     desc 'bridge to use for flat network'
   end

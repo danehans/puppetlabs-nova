@@ -24,6 +24,7 @@ describe 'nova::manage::network' do
       :ensure       => 'present',
       :network      => '10.0.0.0/24',
       :num_networks => 1,
+      :network_size => 256,
       :project      => nil,
       :notify       => 'Exec[nova-db-sync]'
     ) }
@@ -32,12 +33,14 @@ describe 'nova::manage::network' do
     let :params do
       {
         :network      => '10.0.0.0/20',
-        :num_networks => 2
+        :num_networks => 2,
+        :network_size => 512
       }
     end
     it { should contain_nova_network('foo').with(
       :network      => '10.0.0.0/20',
-      :num_networks => 2
+      :num_networks => 2,
+      :network_size => 512
     ) }
   end
 
