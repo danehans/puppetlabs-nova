@@ -14,13 +14,6 @@ class nova::api(
 
   $auth_uri = "${auth_protocol}://${auth_host}:${auth_port}/v2.0"
 
-  exec { 'initial-db-sync':
-    command     => '/usr/bin/nova-manage db sync',
-    refreshonly => true,
-    require     => [Package[$::nova::params::common_package_name], Nova_config['sql_connection']],
-  }
-
-  Package<| title == 'nova-api' |> -> Exec['initial-db-sync']
   Package<| title == 'nova-api' |> -> File['/etc/nova/api-paste.ini']
 
 

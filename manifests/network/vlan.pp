@@ -7,7 +7,8 @@ class nova::network::vlan (
   $force_dhcp_release  = true,
   $dhcp_domain         = 'novalocal',
   $dhcpbridge          = '/usr/bin/nova-dhcpbridge',
-  $dhcpbridge_flagfile = '/etc/nova/nova.conf'
+  $dhcpbridge_flagfile = '/etc/nova/nova.conf',
+  $allow_same_net_traffic = true
 ) {
 
   if $public_interface {
@@ -23,6 +24,7 @@ class nova::network::vlan (
     'dhcp_domain':         value => $dhcp_domain;
     'dhcpbridge':          value => $dhcpbridge;
     'dhcpbridge_flagfile': value => $dhcpbridge_flagfile;
+    'allow_same_net_traffic': value => $allow_same_net_traffic;
   }
 
 }

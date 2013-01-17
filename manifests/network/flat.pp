@@ -6,7 +6,8 @@ class nova::network::flat (
   $flat_interface,
   $fixed_range,
   $public_interface   = undef,
-  $flat_network_bridge = 'br100'
+  $flat_network_bridge = 'br100',
+  $allow_same_net_traffic = false
 ) {
 
   if $public_interface {
@@ -18,6 +19,7 @@ class nova::network::flat (
     'fixed_range':         value => $fixed_range;
     'flat_interface':      value => $flat_interface;
     'flat_network_bridge': value => $flat_network_bridge;
+    'allow_same_net_traffic': value => $allow_same_net_traffic;
   }
 
 }

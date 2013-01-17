@@ -7,8 +7,6 @@ Puppet::Type.type(:nova_config).provide(
   :filetype => :flat
 ) do
 
-  confine :osfamily => [:redhat]
-
   #confine :exists => novaconf
   text_line :comment, :match => /#|\[.*/;
   text_line :blank, :match => /^\s*$/;

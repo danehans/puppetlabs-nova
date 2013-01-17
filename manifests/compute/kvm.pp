@@ -7,6 +7,7 @@ class nova::compute::kvm(
   }
 
   package { 'nova-compute-kvm':
-    ensure => present
+    ensure => present,
+    tag    => "openstack",
   }
 }

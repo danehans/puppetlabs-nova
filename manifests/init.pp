@@ -27,7 +27,9 @@
 # [report_interval] Interval at which nodes report to data store. Optional.
 #    Defaults to '10'.
 # [root_helper] Command used for roothelper. Optional. Distro specific.
-# [monitoring_notifications] A boolean specifying whether or not to send system usage data notifications out on the message queue. Optional, false by default. Only valid for stable/essex.
+# [monitoring_notifications] A boolean specifying whether or not to send system
+#    usage data notifications out on the message queue. Optional, false by default.
+#    Only valid for stable/essex.
 #
 class nova(
   # this is how to query all resources from our clutser
@@ -51,7 +53,8 @@ class nova(
   $periodic_interval = '60',
   $report_interval = '10',
   $root_helper = $::nova::params::root_helper,
-  $monitoring_notifications = false
+  $monitoring_notifications = false,
+  $prevent_db_sync = false
 ) inherits nova::params {
 
   # all nova_config resources should be applied
@@ -74,10 +77,12 @@ class nova(
   # they should be handled as package deps by the OS
   package { 'python':
     ensure => present,
+    tag    => "openstack",
   }
   package { 'python-greenlet':
     ensure => present,
     require => Package['python'],
+    tag    => "openstack",
   }
 
   class { 'nova::utilities': }
@@ -88,13 +93,16 @@ class nova(
 
   package { "python-nova":
     ensure  => present,
-    require => Package["python-greenlet"]
+    require => Package["python-greenlet"],
+    notify => Exec[nova-db-sync],
+    tag    => "openstack",
   }
 
   package { 'nova-common':
     name    => $::nova::params::common_package_name,
     ensure  => present,
-    require => [Package["python-nova"], Anchor['nova-start']]
+    require => [Package["python-nova"], Anchor['nova-start']],
+    tag    => "openstack",
   }
 
   group { 'nova':
@@ -119,10 +127,24 @@ class nova(
 
   # I need to ensure that I better understand this resource
   # this is potentially constantly resyncing a central DB
-  exec { "nova-db-sync":
-    command     => "/usr/bin/nova-manage db sync",
-    refreshonly => "true",
-    require     => [Package['nova-common'], Nova_config['sql_connection']],
+  if ($prevent_db_sync) {
+    exec { "nova-db-sync":
+      command => "/bin/true",
+      refreshonly => true,
+    }
+  } else {
+    exec { "nova-db-sync":
+      command     => "/usr/bin/nova-manage db sync",
+      require => [File['/etc/nova/nova.conf'],
+                  Package[python-nova],
+                  Nova_config['sql_connection'],
+                  Package[$::nova::params::common_package_name]],
+      refreshonly => true,
+    }
+  }
+
+  Nova_config <| title == 'sql_connection' |> {
+    notify +> Exec["nova-db-sync"]
   }
 
   # used by debian/ubuntu in nova::network_bridge to refresh

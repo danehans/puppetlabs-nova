@@ -11,12 +11,14 @@ class nova::compute::libvirt (
     package { "nova-compute-${libvirt_type}":
       ensure => present,
       before => Package['nova-compute'],
+      tag    => "openstack",
     }
   }
 
   package { 'libvirt':
     name   => $::nova::params::libvirt_package_name,
     ensure => present,
+    tag    => "openstack",
   }
 
   service { 'libvirt' :
@@ -26,7 +28,9 @@ class nova::compute::libvirt (
     require  => Package['libvirt'],
   }
 
+  File<| name == '/etc/libvirt/qemu.conf' |> ~> Service['libvirtd']
+
   nova_config { 'libvirt_type': value => $libvirt_type }
-  nova_config { 'connection_type': value => 'libvirt' }
+  nova_config { 'compute_driver': value => 'libvirt.LibvirtDriver' }
   nova_config { 'vncserver_listen': value => $vncserver_listen }
 }
